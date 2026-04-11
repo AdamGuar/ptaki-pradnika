@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ptaki Prądnika Czerwonego</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', 'Arial Rounded MT Bold', Arial, sans-serif;
+            background: #0d1b2a;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+        }
+
+        /* ===== COVER ===== */
+        #cover {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(160deg, #0d1b2a 0%, #1b3a5c 60%, #0d1b2a 100%);
+            z-index: 100;
+            cursor: pointer;
+            transition: opacity 0.7s ease;
+            text-align: center;
+            padding: 2rem;
+        }
+        #cover.hidden { opacity: 0; pointer-events: none; }
+
+        .cover-emoji {
+            font-size: clamp(3rem, 8vw, 6rem);
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+            display: block;
+            letter-spacing: 0.5rem;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-18px); }
+        }
+        .cover-title {
+            font-size: clamp(2rem, 5.5vw, 4.5rem);
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 40px rgba(100, 180, 255, 0.6);
+            line-height: 1.15;
+            margin-bottom: 2.5rem;
+            letter-spacing: -0.5px;
+        }
+        .cover-title span { color: #7ec8e3; }
+        .cover-btn {
+            background: linear-gradient(135deg, #4a90d9 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 1rem 3.5rem;
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            font-weight: 900;
+            border-radius: 60px;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 8px 40px rgba(74, 144, 217, 0.55);
+            animation: glow 2.2s ease-in-out infinite;
+            transition: transform 0.15s;
+        }
+        .cover-btn:hover { transform: scale(1.06); }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 8px 30px rgba(74,144,217,0.5); }
+            50% { box-shadow: 0 8px 60px rgba(74,144,217,0.95); }
+        }
+
+        /* ===== PRESENTATION WRAPPER ===== */
+        #presentation {
+            position: fixed;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.7s ease;
+            pointer-events: none;
+        }
+        #presentation.visible { opacity: 1; pointer-events: all; }
+
+        /* ===== BIRD SLIDE ===== */
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.45s ease;
+        }
+        .slide.active { opacity: 1; pointer-events: all; }
+
+        /* Header */
+        .slide-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 1.4rem 0.4rem;
+            flex-shrink: 0;
+            gap: 0.8rem;
+        }
+        .bird-name {
+            font-size: clamp(1.8rem, 4.5vw, 3.8rem);
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+            line-height: 1;
+            flex: 1;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-shrink: 0;
+        }
+        .bird-index {
+            font-size: clamp(0.75rem, 1.4vw, 0.95rem);
+            font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            background: rgba(0,0,0,0.35);
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+        /* Audio button */
+        .audio-btn {
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .audio-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        .audio-btn.playing {
+            background: rgba(255,220,50,0.3);
+            border-color: #ffdc32;
+            animation: audioPulse 1s ease-in-out infinite;
+        }
+        @keyframes audioPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,220,50,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(255,220,50,0); }
+        }
+
+        /* Photo area */
+        .photo-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            padding: 0 0.5rem;
+        }
+        .photo-frame {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            padding: 0.4rem;
+        }
+        .photo-frame.active { opacity: 1; }
+        .photo-frame img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 14px;
+            box-shadow: 0 12px 50px rgba(0,0,0,0.6);
+        }
+        .photo-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.45);
+            color: white;
+            border: none;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+            z-index: 5;
+            backdrop-filter: blur(4px);
+        }
+        .photo-arrow:hover { background: rgba(0,0,0,0.75); transform: translateY(-50%) scale(1.12); }
+        .photo-arrow.hidden { opacity: 0; pointer-events: none; }
+        .arrow-prev { left: 8px; }
+        .arrow-next { right: 8px; }
+
+        /* Photo dots */
+        .photo-dots {
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+            padding: 0.45rem 0;
+            flex-shrink: 0;
+        }
+        .pdot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        .pdot.active { background: white; transform: scale(1.4); }
+
+        /* Fact bar */
+        .fact-bar { padding: 0.3rem 1.2rem 0.35rem; flex-shrink: 0; }
+        .fact-box {
+            border-radius: 12px;
+            padding: 0.65rem 1.1rem;
+            font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            border-left: 5px solid;
+            background: rgba(0,0,0,0.38);
+            line-height: 1.4;
+        }
+
+        /* Bird navigation */
+        .bird-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.4rem 0.9rem 0.6rem;
+            flex-shrink: 0;
+        }
+        .bnav-btn {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.25);
+            padding: 0.55rem 1.4rem;
+            border-radius: 60px;
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .bnav-btn:hover { background: rgba(255,255,255,0.28); }
+        .bnav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+        /* Bird progress */
+        .bird-progress { display: flex; gap: 5px; align-items: center; }
+        .bdot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            transition: all 0.35s;
+        }
+        .bdot.active { width: 22px; border-radius: 4px; background: white; }
+
+        /* ===== CAMERA INFO SLIDES ===== */
+        .info-slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.45s ease;
+            background: linear-gradient(160deg, #0d1b2a, #0f2340, #0d1b2a);
+        }
+        .info-slide.active { opacity: 1; pointer-events: all; }
+
+        .info-header {
+            padding: 0.8rem 1.4rem 0.4rem;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .info-part-label {
+            font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.08);
+            padding: 0.25rem 0.8rem;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .info-title {
+            font-size: clamp(1.6rem, 4vw, 3.2rem);
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 15px rgba(0,100,255,0.4);
+            line-height: 1.1;
+            flex: 1;
+            padding: 0 1rem;
+        }
+
+        .info-body {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+            gap: 1rem;
+            padding: 0.5rem 1.2rem;
+            min-height: 0;
+        }
+
+        /* Two-column layout for slide 1 */
+        .info-card {
+            flex: 1;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            border-radius: 20px 20px 0 0;
+        }
+        .info-card.blue::before { background: linear-gradient(90deg, #4a90d9, #7ec8e3); }
+        .info-card.orange::before { background: linear-gradient(90deg, #f0a040, #e06020); }
+        .info-card.purple::before { background: linear-gradient(90deg, #8060e0, #c060d0); }
+
+        .info-card-icon {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            line-height: 1;
+        }
+        .info-card-title {
+            font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+            font-weight: 900;
+            color: white;
+        }
+        .info-card-desc {
+            font-size: clamp(0.8rem, 1.6vw, 1.05rem);
+            font-weight: 700;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.5;
+        }
+        .info-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.2rem 0.6rem;
+            font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+            color: rgba(255,255,255,0.6);
+            font-weight: 700;
+            margin-top: auto;
+        }
+
+        /* Single full-width layout for slide 2 */
+        .info-body.single { flex-direction: column; }
+        .info-body.single .info-card { flex: 0; }
+
+        .sensor-diagram {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding: 0.5rem;
+        }
+        .sensor-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-align: center;
+        }
+        .sensor-visual {
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: white;
+            font-size: clamp(0.65rem, 1.3vw, 0.85rem);
+            border: 3px solid;
+            position: relative;
+        }
+        .sensor-visual.ff {
+            width: clamp(90px, 14vw, 160px);
+            height: clamp(60px, 9.3vw, 107px);
+            background: rgba(74,144,217,0.2);
+            border-color: #4a90d9;
+        }
+        .sensor-visual.aps {
+            width: clamp(60px, 9.3vw, 107px);
+            height: clamp(40px, 6.2vw, 71px);
+            background: rgba(46,204,113,0.2);
+            border-color: #2ecc71;
+        }
+        .sensor-visual.mft {
+            width: clamp(44px, 6.9vw, 79px);
+            height: clamp(33px, 5.2vw, 59px);
+            background: rgba(240,160,64,0.2);
+            border-color: #f0a040;
+        }
+        .sensor-label {
+            font-size: clamp(0.75rem, 1.4vw, 0.95rem);
+            font-weight: 700;
+            color: white;
+        }
+        .sensor-sub {
+            font-size: clamp(0.65rem, 1.1vw, 0.8rem);
+            color: rgba(255,255,255,0.5);
+            font-weight: 700;
+        }
+        .sensor-arrow {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            color: rgba(255,255,255,0.3);
+            align-self: center;
+        }
+
+        /* ===== END SLIDE ===== */
+        #end-slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(160deg, #0d1b2a, #1b3a5c);
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.45s ease;
+        }
+        #end-slide.active { opacity: 1; pointer-events: all; }
+        #end-slide .big-emoji {
+            font-size: clamp(3rem, 7vw, 5rem);
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        #end-slide h2 { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; color: white; margin-bottom: 0.8rem; }
+        #end-slide p { font-size: clamp(1rem, 2vw, 1.4rem); color: rgba(255,255,255,0.65); font-weight: 700; margin-bottom: 2.5rem; }
+        #end-slide .restart-btn {
+            background: linear-gradient(135deg, #4a90d9, #9b59b6);
+            color: white;
+            border: none;
+            padding: 0.9rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: 900;
+            border-radius: 60px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.15s;
+        }
+        #end-slide .restart-btn:hover { transform: scale(1.06); }
+
+        /* ===== KEYBOARD HINT ===== */
+        #hint {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: rgba(255,255,255,0.45);
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            pointer-events: none;
+            z-index: 200;
+            transition: opacity 1.5s;
+            white-space: nowrap;
+        }
+        #hint.fade { opacity: 0; }
+    </style>
+</head>
+<body>
+
+<!-- COVER -->
+<div id="cover">
+    <span class="cover-emoji">🦜 🐦 🦅</span>
+    <div class="cover-title">Ptaki<br><span>Prądnika Czerwonego</span></div>
+    <button class="cover-btn" onclick="startPresentation()">Zaczynamy! →</button>
+</div>
+
+<!-- PRESENTATION -->
+<div id="presentation">
+    <!-- slides rendered by JS -->
+    <div id="end-slide">
+        <div class="big-emoji">🎉</div>
+        <h2>Brawo!</h2>
+        <p>To już wszystko na dziś!</p>
+        <button class="restart-btn" onclick="restart()">← Od początku</button>
+    </div>
+</div>
+
+<div id="hint">← → foto &nbsp;|&nbsp; Space / kliknij → następny slajd</div>
+
+<script>
+/* ===================== DATA ===================== */
+const birds = [
+    {
+        name: "Czapla siwa",
+        fact: "💡 Czapla potrafi stać bez ruchu przez bardzo długi czas, cierpliwie czekając aż przepłynie rybka. Jej skrzydła mają prawie 2 metry rozpiętości!",
+        gradient: "linear-gradient(160deg, #0d1f3c, #1a4a7a)",
+        accent: "#5aadff",
+        folder: "czaple",
+        audio: "grey-heron.mp3",
+        photos: ["DSC02075.JPEG","DSC02094.JPEG","DSC02120.JPEG","DSC02121.JPEG","DSC02122.JPEG","IMG_8715.JPG"]
+    },
+    {
+        name: "Dzięcioł duży",
+        fact: "💡 Dzięcioł puka dziobem w drzewa nawet 20 razy na sekundę! Ma specjalny długi język jak harpun, którym wyciąga owady spod kory.",
+        gradient: "linear-gradient(160deg, #2a0e0e, #6a2010)",
+        accent: "#ff7050",
+        folder: "dzieciol duzy",
+        audio: "great-spotted-woodpecker.mp3",
+        photos: ["DSC02837.JPEG","DSC02839.JPEG","DSC02880.JPEG","DSC02885.JPEG","DSC02885-1.JPEG","DSC02893.JPEG"]
+    },
+    {
+        name: "Kaczka krzyżówka",
+        fact: "💡 Samiec kaczki krzyżówki ma piękną ciemnozieloną głowę! Kaczki doskonale pływają i szukają jedzenia pod wodą, machając nóżkami jak wiosłami.",
+        gradient: "linear-gradient(160deg, #0a2018, #0f5030)",
+        accent: "#40cc80",
+        folder: "kaczka-krzyzowka",
+        audio: "mallard.mp3",
+        photos: ["DSC01430.JPG","DSC01433.JPEG"]
+    },
+    {
+        name: "Kos",
+        fact: "💡 Kos to jeden z najlepszych śpiewaków! Samiec ma czarne pióra i żółty dziób. Jego melodyjny śpiew słychać głównie o świcie i o zmierzchu.",
+        gradient: "linear-gradient(160deg, #0a0a12, #1a1a2e)",
+        accent: "#ffcc00",
+        folder: "kos",
+        audio: "blackbird.mp3",
+        photos: ["DSC01315.JPEG","DSC01316.JPG","DSC01317.JPG","DSC01484.JPEG","DSC02904.JPG","DSC02941.JPG","DSC02944.JPG","DSC02946.JPG"]
+    },
+    {
+        name: "Kowalik",
+        fact: "💡 Kowalik to jedyny ptak w Polsce, który potrafi chodzić po drzewie głową w dół! Ma mocne nóżki, które trzymają go jak haczyki.",
+        gradient: "linear-gradient(160deg, #1e1206, #503010)",
+        accent: "#ffaa40",
+        folder: "kowalik",
+        audio: "wood-nuthatch.mp3",
+        photos: ["DSC01618.JPEG","DSC01637.JPEG","DSC01640.JPEG","DSC09470.JPEG","DSC09477.JPEG","DSC09478.JPEG","DSC09480.JPEG","DSC09481.JPEG"]
+    },
+    {
+        name: "Mazurek",
+        fact: "💡 Mazurek wygląda jak wróbel, ale ma brązową czapeczkę na głowie i czarną plamkę na policzku. Lubi mieszkać w gromadkach z innymi mazurkami!",
+        gradient: "linear-gradient(160deg, #1e1206, #402808)",
+        accent: "#d4901a",
+        folder: "mazurek",
+        audio: "tree-sparrow.mp3",
+        photos: ["DSC08453.JPEG","DSC08456.JPEG","DSC08460.JPEG","DSC08461.JPEG","DSC08463.JPEG","DSC08467.JPEG"]
+    },
+    {
+        name: "Raniuszek",
+        fact: "💡 Raniuszek jest malutki jak piłeczka ping-pong, ale za to ma długi ogon! Lata w stadkach i buduje gniazdko w kształcie koszyczka uplecionego z mchu.",
+        gradient: "linear-gradient(160deg, #200a18, #601840)",
+        accent: "#ff80c0",
+        folder: "raniuszek",
+        audio: "long-tailed-tit.mp3",
+        photos: ["DSC03867.JPEG","DSC03880.JPEG","DSC03881.JPEG","DSC03890.JPEG","DSC03891.JPEG","DSC03903.JPEG","DSC03915.JPEG"]
+    },
+    {
+        name: "Rudzik",
+        fact: "💡 Rudzik ma pomarańczowy brzuszek i jest bardzo odważny! To on najczęściej śpiewa o świcie. Nie lubi innych rudzików na swoim terenie!",
+        gradient: "linear-gradient(160deg, #1e0a00, #602008)",
+        accent: "#ff8535",
+        folder: "rudzik",
+        audio: "robin.mp3",
+        photos: ["DSC04793.JPEG","DSC04809.JPEG","DSC04818.JPEG","DSC04833.JPEG","DSC04843.JPEG","DSC04844.JPEG"]
+    },
+    {
+        name: "Sikorka modraszka",
+        fact: "💡 Sikorka modraszka ma niebieską czapeczkę i żółty brzuszek. Jest super zwinna – potrafi wisieć do góry nogami na gałązce, szukając owadów!",
+        gradient: "linear-gradient(160deg, #08142e, #103a70)",
+        accent: "#50b0ff",
+        folder: "sikorka modraszka",
+        audio: "blue-tit.mp3",
+        photos: ["DSC02523.JPEG","DSC02546.JPEG","DSC02547.JPEG","DSC02547-1.JPEG"]
+    },
+    {
+        name: "Sikorka bogatka",
+        fact: "💡 Sikorka bogatka to największa sikorka w Polsce! Ma żółty brzuszek z czarnym krawatkiem. Jest taka sprytna, że potrafi otwierać folię na butelkach mleka!",
+        gradient: "linear-gradient(160deg, #101e02, #284a04)",
+        accent: "#90d020",
+        folder: "sikorka-bogatka",
+        audio: "great-tit.mp3",
+        photos: ["DSC07902.JPEG","DSC07910.JPEG","DSC07914.JPEG","DSC07917.JPEG"]
+    },
+    {
+        name: "Sójka",
+        fact: "💡 Sójka to leśny strażnik – głośno krzyczy, gdy zobaczy coś podejrzanego! Jest bardzo mądra i pamięta tysiące miejsc, gdzie zakopała żołędzie na zimę.",
+        gradient: "linear-gradient(160deg, #120820, #361660)",
+        accent: "#a060f0",
+        folder: "sojka",
+        audio: "jay.mp3",
+        photos: ["DSC08082.JPEG","DSC08087.JPEG","DSC08088.JPEG","DSC08089.JPEG"]
+    },
+    {
+        name: "🐿️ Wiewiórka! (niespodzianka!)",
+        fact: "😄 Hej, to nie jest ptak! Ale wiewiórka też mieszka w Prądniku Czerwonym i jest równie ciekawa! Skacze między drzewami jak superbohater i chowa orzechy na zimę.",
+        gradient: "linear-gradient(160deg, #1a1000, #5a3200)",
+        accent: "#ff9900",
+        folder: "wiewiorka",
+        audio: null,
+        photos: ["DSC04879.JPG","DSC04880.JPG","DSC04948.JPG","DSC04949.JPG","DSC04950.JPG"]
+    }
+];
+
+const totalBirds = birds.length;
+
+/* ===================== STATE ===================== */
+let currentSlide = 0; // 0..totalBirds-1 = birds, totalBirds = camera1, totalBirds+1 = camera2
+const TOTAL_SLIDES = totalBirds + 1; // +1 camera slide
+let currentPhoto = 0;
+let currentAudioEl = null;
+let currentAudioBtn = null;
+let touchStartX = 0;
+let hintTimer;
+
+/* ===================== AUDIO ===================== */
+function stopAudio() {
+    if (currentAudioEl) {
+        currentAudioEl.pause();
+        currentAudioEl.currentTime = 0;
+        currentAudioEl = null;
+    }
+    if (currentAudioBtn) {
+        currentAudioBtn.textContent = '🔊';
+        currentAudioBtn.classList.remove('playing');
+        currentAudioBtn = null;
+    }
+}
+
+function toggleAudio(birdIdx) {
+    const audio = document.getElementById(`audio-${birdIdx}`);
+    const btn = document.getElementById(`audio-btn-${birdIdx}`);
+    if (!audio) return;
+
+    if (currentAudioEl && currentAudioEl !== audio) stopAudio();
+
+    if (audio.paused) {
+        audio.play();
+        btn.textContent = '⏸️';
+        btn.classList.add('playing');
+        currentAudioEl = audio;
+        currentAudioBtn = btn;
+        audio.onended = () => {
+            btn.textContent = '🔊';
+            btn.classList.remove('playing');
+            currentAudioEl = null;
+            currentAudioBtn = null;
+        };
+    } else {
+        stopAudio();
+    }
+}
+
+/* ===================== BUILD SLIDES ===================== */
+function buildBirdSlide(bird, bi) {
+    const slide = document.createElement('div');
+    slide.className = 'slide';
+    slide.id = `slide-${bi}`;
+    slide.style.background = bird.gradient;
+    slide.style.setProperty('--accent', bird.accent);
+
+    // Audio element
+    if (bird.audio) {
+        const audioEl = document.createElement('audio');
+        audioEl.id = `audio-${bi}`;
+        audioEl.src = `${encodeURIComponent(bird.folder)}/${encodeURIComponent(bird.audio)}`;
+        audioEl.preload = 'none';
+        slide.appendChild(audioEl);
+    }
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'slide-header';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'bird-name';
+    nameEl.textContent = bird.name;
+    header.appendChild(nameEl);
+
+    const headerRight = document.createElement('div');
+    headerRight.className = 'header-right';
+
+    if (bird.audio) {
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'audio-btn';
+        audioBtn.id = `audio-btn-${bi}`;
+        audioBtn.title = 'Odtwórz dźwięk';
+        audioBtn.textContent = '🔊';
+        audioBtn.onclick = (e) => { e.stopPropagation(); toggleAudio(bi); };
+        headerRight.appendChild(audioBtn);
+    }
+
+    const indexEl = document.createElement('div');
+    indexEl.className = 'bird-index';
+    indexEl.textContent = `Ptak ${bi + 1} z ${totalBirds}`;
+    headerRight.appendChild(indexEl);
+    header.appendChild(headerRight);
+    slide.appendChild(header);
+
+    // Photo area
+    const photoArea = document.createElement('div');
+    photoArea.className = 'photo-area';
+    photoArea.id = `pa-${bi}`;
+
+    bird.photos.forEach((photo, pi) => {
+        const frame = document.createElement('div');
+        frame.className = 'photo-frame' + (pi === 0 ? ' active' : '');
+        frame.id = `frame-${bi}-${pi}`;
+        const img = document.createElement('img');
+        img.src = `${encodeURIComponent(bird.folder)}/${encodeURIComponent(photo)}`;
+        img.alt = `${bird.name} - zdjęcie ${pi + 1}`;
+        img.loading = 'lazy';
+        frame.appendChild(img);
+        photoArea.appendChild(frame);
+    });
+
+    const prevArrow = document.createElement('button');
+    prevArrow.className = 'photo-arrow arrow-prev hidden';
+    prevArrow.innerHTML = '&#8592;';
+    prevArrow.onclick = (e) => { e.stopPropagation(); changePhoto(bi, -1); };
+    photoArea.appendChild(prevArrow);
+
+    const nextArrow = document.createElement('button');
+    nextArrow.className = 'photo-arrow arrow-next' + (bird.photos.length <= 1 ? ' hidden' : '');
+    nextArrow.innerHTML = '&#8594;';
+    nextArrow.onclick = (e) => { e.stopPropagation(); changePhoto(bi, 1); };
+    photoArea.appendChild(nextArrow);
+
+    slide.appendChild(photoArea);
+
+    // Photo dots
+    if (bird.photos.length > 1) {
+        const dots = document.createElement('div');
+        dots.className = 'photo-dots';
+        dots.id = `pdots-${bi}`;
+        bird.photos.forEach((_, pi) => {
+            const d = document.createElement('button');
+            d.className = 'pdot' + (pi === 0 ? ' active' : '');
+            d.onclick = (e) => { e.stopPropagation(); goToPhoto(bi, pi); };
+            dots.appendChild(d);
+        });
+        slide.appendChild(dots);
+    }
+
+    // Fact
+    const factBar = document.createElement('div');
+    factBar.className = 'fact-bar';
+    factBar.innerHTML = `<div class="fact-box" style="border-color:${bird.accent}">${bird.fact}</div>`;
+    slide.appendChild(factBar);
+
+    // Bird nav
+    const birdNav = document.createElement('div');
+    birdNav.className = 'bird-nav';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'bnav-btn';
+    prevBtn.innerHTML = '&#8592; Poprzedni';
+    prevBtn.disabled = (bi === 0);
+    prevBtn.onclick = (e) => { e.stopPropagation(); changeSlide(-1); };
+    birdNav.appendChild(prevBtn);
+
+    const progress = document.createElement('div');
+    progress.className = 'bird-progress';
+    for (let i = 0; i < TOTAL_SLIDES; i++) {
+        const bd = document.createElement('div');
+        bd.className = 'bdot' + (i === bi ? ' active' : '');
+        progress.appendChild(bd);
+    }
+    birdNav.appendChild(progress);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'bnav-btn';
+    nextBtn.innerHTML = 'Następny &#8594;';
+    nextBtn.onclick = (e) => { e.stopPropagation(); changeSlide(1); };
+    birdNav.appendChild(nextBtn);
+
+    slide.appendChild(birdNav);
+
+    // Click to advance
+    slide.addEventListener('click', () => changeSlide(1));
+    slide.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    slide.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) { if (dx < 0) changeSlide(1); else changeSlide(-1); }
+    }, { passive: true });
+
+    return slide;
+}
+
+function buildCameraSlide1(slideIdx) {
+    const slide = document.createElement('div');
+    slide.className = 'info-slide';
+    slide.id = `slide-${slideIdx}`;
+
+    slide.innerHTML = `
+        <div class="info-header">
+            <div class="info-title">Budowa aparatu</div>
+            <div class="info-part-label">Część 2</div>
+        </div>
+        <div class="info-body">
+            <div class="info-card blue">
+                <div class="info-card-icon">📷</div>
+                <div class="info-card-title">Body (korpus)</div>
+                <div class="info-card-desc">
+                    To "serce" aparatu. W środku jest <strong>matryca</strong>, migawka i elektronika.
+                    Tu trafia karta pamięci ze zdjęciami.
+                    Body steruje wszystkimi ustawieniami — czasem naświetlania, czułością ISO i nie tylko.
+                </div>
+                <div class="info-tag">= mózg i oczy aparatu</div>
+            </div>
+            <div class="info-card orange">
+                <div class="info-card-icon">🔭</div>
+                <div class="info-card-title">Obiektyw (lens)</div>
+                <div class="info-card-desc">
+                    Skupia światło i kieruje je na matrycę.
+                    Różne obiektywy dają różny <strong>kąt widzenia</strong> — szeroki (krajobraz) lub wąski (teleobiektyw do ptaków!).
+                    Można je wymieniać w zależności od potrzeb.
+                </div>
+                <div class="info-tag">= oko aparatu</div>
+            </div>
+        </div>`;
+
+    buildInfoNav(slide, slideIdx);
+    return slide;
+}
+
+function buildCameraSlide2(slideIdx) {
+    const slide = document.createElement('div');
+    slide.className = 'info-slide';
+    slide.id = `slide-${slideIdx}`;
+
+    slide.innerHTML = `
+        <div class="info-header">
+            <div class="info-title">Matryca</div>
+            <div class="info-part-label">Część 2</div>
+        </div>
+        <div class="info-body" style="flex-direction:column; gap:0.8rem;">
+            <div class="info-card purple" style="flex:0">
+                <div class="info-card-desc" style="color:white; font-size:clamp(0.9rem,1.8vw,1.15rem)">
+                    Matryca (sensor) to małe urządzenie elektroniczne, które <strong>zamienia światło w cyfrowy obraz</strong>.
+                    Im większa matryca, tym więcej światła łapie — dlatego duże aparaty robią lepsze zdjęcia w ciemności!
+                    Rozmiar podawany jest w <strong>megapikselach (MP)</strong> — jeden megapiksel to milion małych punktów.
+                </div>
+            </div>
+            <div class="sensor-diagram">
+                <div class="sensor-box">
+                    <div class="sensor-visual ff">Pełna klatka</div>
+                    <div class="sensor-label">Full Frame</div>
+                    <div class="sensor-sub">36 × 24 mm</div>
+                </div>
+                <div class="sensor-arrow">→</div>
+                <div class="sensor-box">
+                    <div class="sensor-visual aps">APS-C</div>
+                    <div class="sensor-label">APS-C</div>
+                    <div class="sensor-sub">~23 × 15 mm</div>
+                </div>
+                <div class="sensor-arrow">→</div>
+                <div class="sensor-box">
+                    <div class="sensor-visual mft">MFT</div>
+                    <div class="sensor-label">Mikro 4/3</div>
+                    <div class="sensor-sub">~17 × 13 mm</div>
+                </div>
+            </div>
+        </div>`;
+
+    buildInfoNav(slide, slideIdx);
+    return slide;
+}
+
+function buildInfoNav(slide, slideIdx) {
+    const nav = document.createElement('div');
+    nav.className = 'bird-nav';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'bnav-btn';
+    prevBtn.innerHTML = '&#8592; Poprzedni';
+    prevBtn.onclick = (e) => { e.stopPropagation(); changeSlide(-1); };
+    nav.appendChild(prevBtn);
+
+    const progress = document.createElement('div');
+    progress.className = 'bird-progress';
+    for (let i = 0; i < TOTAL_SLIDES; i++) {
+        const bd = document.createElement('div');
+        bd.className = 'bdot' + (i === slideIdx ? ' active' : '');
+        progress.appendChild(bd);
+    }
+    nav.appendChild(progress);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'bnav-btn';
+    nextBtn.innerHTML = 'Następny &#8594;';
+    nextBtn.onclick = (e) => { e.stopPropagation(); changeSlide(1); };
+    nav.appendChild(nextBtn);
+
+    slide.appendChild(nav);
+
+    slide.addEventListener('click', () => changeSlide(1));
+    slide.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    slide.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) { if (dx < 0) changeSlide(1); else changeSlide(-1); }
+    }, { passive: true });
+}
+
+function buildSlides() {
+    const pres = document.getElementById('presentation');
+    const endSlide = document.getElementById('end-slide');
+
+    birds.forEach((bird, bi) => {
+        pres.insertBefore(buildBirdSlide(bird, bi), endSlide);
+    });
+
+    pres.insertBefore(buildCameraSlide1(totalBirds), endSlide);
+}
+
+/* ===================== NAVIGATION ===================== */
+function startPresentation() {
+    document.getElementById('cover').classList.add('hidden');
+    document.getElementById('presentation').classList.add('visible');
+    showSlide(0);
+    showHint();
+}
+
+function restart() {
+    document.getElementById('end-slide').classList.remove('active');
+    showSlide(0);
+}
+
+function showSlide(index) {
+    stopAudio();
+    document.querySelectorAll('.slide, .info-slide').forEach(s => s.classList.remove('active'));
+    document.getElementById('end-slide').classList.remove('active');
+
+    if (index >= TOTAL_SLIDES) {
+        document.getElementById('end-slide').classList.add('active');
+        currentSlide = TOTAL_SLIDES;
+        return;
+    }
+    if (index < 0) return;
+
+    currentSlide = index;
+    currentPhoto = 0;
+
+    const slide = document.getElementById(`slide-${index}`);
+    if (slide) slide.classList.add('active');
+
+    if (index < totalBirds) goToPhoto(index, 0);
+    updateProgressDots();
+}
+
+function changeSlide(dir) {
+    const next = currentSlide + dir;
+    if (next < 0) return;
+    showSlide(next);
+}
+
+function changePhoto(birdIdx, dir) {
+    if (birdIdx !== currentSlide) return;
+    const bird = birds[birdIdx];
+    let next = currentPhoto + dir;
+    if (next < 0) next = 0;
+    if (next >= bird.photos.length) next = bird.photos.length - 1;
+    goToPhoto(birdIdx, next);
+}
+
+function goToPhoto(birdIdx, photoIdx) {
+    const bird = birds[birdIdx];
+    currentPhoto = photoIdx;
+
+    bird.photos.forEach((_, pi) => {
+        const frame = document.getElementById(`frame-${birdIdx}-${pi}`);
+        if (frame) frame.classList.toggle('active', pi === photoIdx);
+    });
+
+    const dotsEl = document.getElementById(`pdots-${birdIdx}`);
+    if (dotsEl) {
+        dotsEl.querySelectorAll('.pdot').forEach((d, i) => d.classList.toggle('active', i === photoIdx));
+    }
+
+    const pa = document.getElementById(`pa-${birdIdx}`);
+    if (pa) {
+        const prevA = pa.querySelector('.arrow-prev');
+        const nextA = pa.querySelector('.arrow-next');
+        if (prevA) prevA.classList.toggle('hidden', photoIdx === 0);
+        if (nextA) nextA.classList.toggle('hidden', photoIdx === bird.photos.length - 1);
+    }
+}
+
+function updateProgressDots() {
+    document.querySelectorAll('.bird-progress').forEach(prog => {
+        prog.querySelectorAll('.bdot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    });
+}
+
+function showHint() {
+    const hint = document.getElementById('hint');
+    hint.classList.remove('fade');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => hint.classList.add('fade'), 4500);
+}
+
+/* ===================== KEYBOARD ===================== */
+document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('presentation').classList.contains('visible')) return;
+    if (currentSlide >= totalBirds) {
+        if (e.key === 'ArrowLeft') changeSlide(-1);
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); changeSlide(1); }
+        return;
+    }
+    const bird = birds[currentSlide];
+    switch (e.key) {
+        case 'ArrowLeft':
+            e.preventDefault();
+            if (currentPhoto > 0) changePhoto(currentSlide, -1);
+            else changeSlide(-1);
+            break;
+        case 'ArrowRight':
+        case ' ':
+            e.preventDefault();
+            if (currentPhoto < bird.photos.length - 1) changePhoto(currentSlide, 1);
+            else changeSlide(1);
+            break;
+        case 'ArrowUp':   e.preventDefault(); changeSlide(-1); break;
+        case 'ArrowDown':
+        case 'Enter':     e.preventDefault(); changeSlide(1); break;
+    }
+});
+
+/* ===================== INIT ===================== */
+buildSlides();
+</script>
+</body>
+</html>
